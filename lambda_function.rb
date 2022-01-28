@@ -1,3 +1,5 @@
+require 'net/https'
+require 'json'
 require 'dotenv/load'
 require 'google/apis/analytics_v3'
 
@@ -18,6 +20,20 @@ data = client.get_ga_data(
   }
 )
 
-data.rows.each do |row|
-  p row
+# data.rows.each do |row|
+#   p row
+# end
+
+result = data.rows
+
+uri = URI.parse("#{ENV['SLACK_WEB_HOOK_URL']}")
+
+request = Net::HTTP::Post.new(uri.request_uri)
+request.body = {text: "処理結果: #{result}"}.to_json
+
+http = Net::HTTP.new(uri.host, uri.port)
+http.use_ssl = true
+
+http.start do |h|
+  puts h.request(request).body
 end
